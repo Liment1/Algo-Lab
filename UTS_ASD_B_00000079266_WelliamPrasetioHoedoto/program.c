@@ -12,12 +12,22 @@ struct gorideDestinasi {
     int max;
     int front;
 };
+struct DestinasiPilihan {
+    char chosenNama[50];
+    char chosenAlamat[300];
+    int isValid;
+};
+
 
 struct gorideKendaraan {
     char jenis[20];
     int waktuDisplay[2];
     int penumpang;
     int harga;
+};
+struct KendaraanPilihan {
+    struct gorideKendaraan chosenKendaraan;
+    int isValid;
 };
 
 //queue
@@ -32,6 +42,10 @@ struct goridePembayaran {
     char jenis[30];
     char deskripsi[50];
 };
+struct PembayaranPilihan {
+    struct goridePembayaran chosenPembayaran;
+    int isValid;
+};
 
 struct gorideDiskon{
     int jumlah;
@@ -39,9 +53,9 @@ struct gorideDiskon{
     char jenisKendaraan1[20];
     char jenisKendaraan2[20];
 };
-
-struct gofoodStruct {
-
+struct DiskonPilihan {
+    struct gorideDiskon diskonPilihan;
+    int isValid; 
 };
 
 //main function
@@ -50,38 +64,43 @@ void gorideFunc(int* uangUser);
 void gofoodFunc(int* uangUser);
 
 //goride function
-int gorideDestination(struct gorideDestinasi *destinasi);
+struct DestinasiPilihan gorideDestination();
 void gorideDisplayMap();
+struct KendaraanPilihan  pilihKendaraan();
+struct PembayaranPilihan caraPembayaran(int uangUser);
+void queuePemesanan();
 
 //function stack
 void arrPushGorideDes(struct gorideDestinasi *goride, char nama[], char alamat[]);
 void queuePemesanan();
 
-int pilihKendaraan(struct gorideKendaraan *kendaraan) {
+struct KendaraanPilihan pilihKendaraan() {
+    struct KendaraanPilihan pilihan = {{}, 0}; 
     //copying data
     struct gorideKendaraan kendaraanData[] = {{"GoRide", {3,7}, 1, 33500}, {"GoRide Comfort", {1, 4}, 1, 36500}, {"GoCar", {3, 7}, 4, 44500}, {"GoCar Hemat", {8,12}, 4, 39500}, {"GoBlueBird", {3, 7}, 6, 90000}, {"GoCar XL", {3, 7}, 6, 52000}};
-    kendaraan = kendaraanData;
     int numKendaraan = sizeof(kendaraanData) / sizeof(kendaraanData[0]);;
 
     //display
     for(int i = 0; i < numKendaraan; i++) {
-        printf("%d. %s %d-%dmenit\n   %d penumpang Rp%d\n", i+1, kendaraan[i].jenis, kendaraan[i].waktuDisplay[0], kendaraan[i].waktuDisplay[1],  kendaraan[i].penumpang, kendaraan[i].harga);
+        printf("%d. %s %d-%dmenit\n   %d penumpang Rp%d\n", i+1, kendaraanData[i].jenis, kendaraanData[i].waktuDisplay[0], kendaraanData[i].waktuDisplay[1],  kendaraanData[i].penumpang, kendaraanData[i].harga);
     }
 
+    //input
     int input;
     printf("Masukkan jenis kendaraan (number): ");
-    
     scanf("%d", &input); getchar();
-    if (input-1 >= 0 || input-1 < numKendaraan) {  
-        printf("Kendaraan: %s - %d\n\n", kendaraan[input-1].jenis, kendaraan[input-1].harga);
-        return 0;
+    if (input-1 >= 0 && input-1 < sizeof(kendaraanData)/sizeof(kendaraanData[0])) {
+        pilihan.chosenKendaraan = kendaraanData[input-1];
+        pilihan.isValid = 1;
+        printf("Kendaraan: %s\n\n", pilihan.chosenKendaraan);
+    } else {
+        printf("Kendaraan tidak ditemukan.\n");
     }
-    printf("Kendaraan tidak ditemukan.\n");
-    return 1;
+    return pilihan;
 }   
 
-int caraPembayaran(int uangUser, struct goridePembayaran *pembayaran, int length) {
-    int pilihan;
+struct PembayaranPilihan caraPembayaran(int uangUser) {
+    struct PembayaranPilihan pilihan = {{}, 0};
     //copying from this function
     struct goridePembayaran pembayaranData[] = {
         {"Gopay", ""},
@@ -90,28 +109,30 @@ int caraPembayaran(int uangUser, struct goridePembayaran *pembayaran, int length
         {"LinkAja", ""}, {"Jago Pockets", "Jago Bank account"}, 
         {"cash", ""}
     };
-    pembayaran = pembayaranData;
-    sprintf(pembayaran[0].deskripsi, "%s%d", "Balance : " , uangUser);
+    sprintf(pembayaranData[0].deskripsi, "%s%d", "Balance : " , uangUser);
 
     //display
     int numPembayaran = sizeof(pembayaranData) / sizeof(pembayaranData[0]);
     for(int i = 0; i < numPembayaran; i++) {
-        printf("%d. %s\n   %s\n", i+1, pembayaran[i].jenis, pembayaran[i].deskripsi);
+        printf("%d. %s\n   %s\n", i+1, pembayaranData[i].jenis, pembayaranData[i].deskripsi);
     }
 
     //input
     int input;
-    printf("Masukkan jenis payment (number): ");
+    printf("Masukkan jenis pembayaran (number): ");
     scanf("%d", &input); getchar();
-    if (input-1 >= 0 || input-1 < numPembayaran) {  
-        printf("Payment: %s\n\n", pembayaran[input-1].jenis);
-        return 0;
+    if (input-1 >= 0 && input-1 < sizeof(pembayaranData)/sizeof(pembayaranData[0])) {
+        pilihan.chosenPembayaran = pembayaranData[input-1];
+        pilihan.isValid = 1;
+        printf("Pembayaran: %s\n\n", pilihan.chosenPembayaran);
+    } else {
+        printf("Pembayaran tidak ditemukan.\n");
     }
-    printf("Payment tidak ditemukan.\n");
-    return 1;
+    return pilihan;
 }
 
-int diskon() {
+struct DiskonPilihan diskon() {
+    struct DiskonPilihan pilihan = {{}, 0};
     struct gorideDiskon diskon[] = {{5000, "17-03-24", "goride", "goride(comfort)"}, {10000, "17-03-24", "gocar", "gocarXL"}, {5000, "17-03-24", "goride", "goride(comfort)"}, {5000, "17-03-24", "goride", "goride(comfort)"}, {10000, "17-03-24", "gocar", "gocarXL"}, {10000, "17-03-24", "gocar", "gocarXL"}};
     int numDiskon = sizeof(diskon)/sizeof(diskon[0]);
     
@@ -135,49 +156,14 @@ int diskon() {
     printf("Pilih jumlah diskon (number): ");
     scanf("%d", &input); getchar();
     if (input-1 >= 0 || input-1 < numDiskon) {  
-        printf("%d\n", diskon[input].jumlah);
-        return diskon[input].jumlah;
+        printf("Diskon: %d\n\n", diskon[input-1].jumlah);
+        pilihan.diskonPilihan = diskon[input-1];
+        pilihan.isValid = 1;
+        return pilihan;
     }
-    printf("Diskon not found.\n");  
-    return -1;
+    printf("Diskon not found.\n\n");  
+    return pilihan;
 }
-
-// //linked list
-// struct gorideDestinasiNode {
-//     char nama[50];
-//     char alamat[300];
-//     struct gorideDestinasiNode *next;
-// };
-
-// struct goridePerjalananQueueNode {
-//     char nomorPerjalanan[50];
-//     struct goridePerjalananQueueNode *next;
-// };
-
-// struct goridePerjalananQueue {
-//     struct goridePerjalananQueueNode *front;
-//     struct goridePerjalananQueueNode *rear;
-// };
-
-// void freeGorideDestinasiList(struct gorideDestinasiNode *head) {
-//     struct gorideDestinasiNode *tmp;
-//     while (head != NULL) {
-//         tmp = head;
-//         head = head->next;
-//         free(tmp);
-//     }
-// }
-
-// void freeGoridePerjalananQueue(struct goridePerjalananQueue *queue) {
-//     struct goridePerjalananQueueNode *tmp;
-//     while (queue->front != NULL) {
-//         tmp = queue->front;
-//         queue->front = queue->front->next;
-//         free(tmp);
-//     }
-//     queue->rear = NULL; // After clearing, rear should also be NULL.
-// }
-
 
 int main() {
     //printing logo
@@ -229,10 +215,7 @@ void gorideFunc(int* uangUser){
     struct gorideDestinasi destinasiStruct;
     destinasiStruct.max = 50;
     destinasiStruct.front = 0;
-    struct goridePembayaran pembayaran[10];
-    struct gorideKendaraan kendaraan[10];
     
-
     //main function 
     printf("Goride\n");
     printf("Where would you like to go?\n");
@@ -241,52 +224,69 @@ void gorideFunc(int* uangUser){
     gorideDisplayMap();
 
     //displaying destination
-    if (gorideDestination(&destinasiStruct) > 1)
+    struct DestinasiPilihan destinasiPilihan = gorideDestination();
+    if (!destinasiPilihan.isValid) {
+        printf("Invalid destination.\n");
         return;
+    }
 
     //pilih kendaraan
-    if(pilihKendaraan(kendaraan) > 0)
+    struct KendaraanPilihan kendaraanPilihan = pilihKendaraan();
+    if (!kendaraanPilihan.isValid) {
+        printf("Invalid vehicle.\n");
         return;
+    }
 
     //displaying pembayaran
-    int length = sizeof(pembayaran)/sizeof(pembayaran[0]);
-    if(caraPembayaran(*uangUser, pembayaran, length) > 0)
+    struct PembayaranPilihan pembayaranPilihanS = caraPembayaran(*uangUser);
+    if (!pembayaranPilihanS.isValid) {
+        printf("Invalid payment.\n");
         return;
+    }
 
     //antrian pemesanan
     queuePemesanan();  
 
     //pilih diskon
-    dis = diskon();
-    if(dis < 0)
+    struct DiskonPilihan diskonPilihanS = diskon();
+    if (!diskonPilihanS.isValid) {
+        printf("Invalid discount choice. Exiting.\n");
         return;
-
-    *uangUser -= dis;
+    }
+    
+    printf("Destinasi: %s\n", destinasiPilihan.chosenNama);
+    printf("Kendaraan: %s - %d\n", kendaraanPilihan.chosenKendaraan.jenis, kendaraanPilihan.chosenKendaraan.harga);
+    printf("Pembayaran: %s\n", pembayaranPilihanS.chosenPembayaran.jenis);
+    printf("Diskon: %d\n\n", diskonPilihanS.diskonPilihan.jumlah);
+    *uangUser -= (diskonPilihanS.diskonPilihan.jumlah+kendaraanPilihan.chosenKendaraan.harga);
+    printf("Pembayaran akhir: %d\n", *uangUser);
     return;
 }
 
 //goride function
-int gorideDestination(struct gorideDestinasi *destinasi) {
-    int i = 1;
-    int choice = 0;
+struct DestinasiPilihan gorideDestination() {
+    struct DestinasiPilihan pilihan = {{}, {}, 0};
+    struct gorideDestinasi destinasi;
+    destinasi.front = 0;
+    destinasi.max = 50;
+    int choice;
     char nama[50], alamat[100];
     FILE *fdes = fopen("C:\\Users\\User\\OneDrive\\Attachments\\Documents\\kuliah\\mata_perkuliahan\\Semester2\\DatStrucALgo\\UTS\\UTS_ASD_B_00000079266_WelliamPrasetioHoedoto\\goridetxtFiles\\destinasi.txt", "r");
     while(!feof(fdes)){
         fscanf(fdes, "%[^#]#%[^\n]\n", nama, alamat);
-        arrPushGorideDes(destinasi, nama, alamat);
-        i++;
+        arrPushGorideDes(&destinasi, nama, alamat);
     }
     fclose(fdes);
 
-    if (destinasi->front == 0) {
+    if (destinasi.front == 0) {
         printf("Tidak ada destinasi.\n");
-        destinasi->front = 0;
-        return 1;   
+        destinasi.front = 0;
+        return pilihan;   
     }
 
 
     //display dari terakhir (POP)
-    struct gorideDestinasi destinasiTemp = *destinasi;
+    struct gorideDestinasi destinasiTemp = destinasi;
     for(int i = 0, j = 1; destinasiTemp.front-1 >= i; destinasiTemp.front--, j++) {
         if (strcmp(" ", destinasiTemp.alamat[destinasiTemp.front-1]) == 0)
             printf("%d. %s\n", j, destinasiTemp.nama[destinasiTemp.front-1]);
@@ -294,43 +294,44 @@ int gorideDestination(struct gorideDestinasi *destinasi) {
             printf("%d. %s - %s\n", j, destinasiTemp.nama[destinasiTemp.front-1], destinasiTemp.alamat[destinasiTemp.front-1]);
     }
 
+    //input
     printf("Pilih destinasi(0 to cancel): ");
     scanf("%d", &choice); getchar();
     printf("\n");
 
-    if (choice < 0 || choice > destinasi->front) {
+    if (choice < 0 || choice > destinasi.front) {
         printf("Pilihan Invalid.\n");
-        destinasi->front = 0;
-        return 1;
+        destinasi.front = 0;
+        return pilihan;
     } 
     else if (choice == 0) {
-        destinasi->front = 0;
-        return 2;
+        destinasi.front = 0;
+        return pilihan;
     } 
     else {
         //pop sampai ketemu
-        int tempMax = destinasi->front;
-        while(!(destinasi->front < 0)){
-            if (destinasi->front == (tempMax - choice)){
-                if (strcmp(" ", destinasi->alamat[destinasi->front]) == 0)
-                    printf("Destinasi yang dipilih:  %s\n\n", destinasi->nama[destinasi->front]);
-                else
-                    printf("Destinasi yang dipilih: %s - %s\n\n", destinasi->nama[destinasi->front], destinasi->alamat[destinasi->front]);
+        int tempMax = destinasi.front;
+        while(!(destinasi.front < 0)){
+            if (destinasi.front == (tempMax - choice)){
+                strcpy(pilihan.chosenNama, destinasi.nama[choice - 1]);
+                strcpy(pilihan.chosenAlamat, destinasi.alamat[choice - 1]);
+                pilihan.isValid = 1;
+                printf("Nama Tempat: %s\n\n", pilihan.chosenNama);
             }
-            destinasi->front = destinasi->front-1;
+            destinasi.front = destinasi.front-1;
         }
     }
-    destinasi->front = 0;
-    return 0;
+    destinasi.front = 0;
+    return pilihan;
 }
 
 void arrPushGorideDes(struct gorideDestinasi *goride, char nama[], char alamat[]) {
-    if (goride->front >= goride->max) {
+    if (goride->front < 0 || goride->front >= goride->max) {
         printf("Destination stack is full, cannot add more destinations.\n");
     } else {
         strcpy(goride->nama[goride->front], nama);
         strcpy(goride->alamat[goride->front], alamat);
-        goride->front++; 
+        goride->front++;
     }
 }
 
