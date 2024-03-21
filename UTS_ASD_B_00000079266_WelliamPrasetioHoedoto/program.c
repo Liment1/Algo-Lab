@@ -57,32 +57,57 @@ void gorideDisplayMap();
 void arrPushGorideDes(struct gorideDestinasi *goride, char nama[], char alamat[]);
 void queuePemesanan();
 
-int caraPembayaran(int uangUser) {
+int pilihKendaraan(struct gorideKendaraan *kendaraan) {
+    //copying data
+    struct gorideKendaraan kendaraanData[] = {{"GoRide", {3,7}, 1, 33500}, {"GoRide Comfort", {1, 4}, 1, 36500}, {"GoCar", {3, 7}, 4, 44500}, {"GoCar Hemat", {8,12}, 4, 39500}, {"GoBlueBird", {3, 7}, 6, 90000}, {"GoCar XL", {3, 7}, 6, 52000}};
+    kendaraan = kendaraanData;
+    int numKendaraan = sizeof(kendaraanData) / sizeof(kendaraanData[0]);;
+
+    //display
+    for(int i = 0; i < numKendaraan; i++) {
+        printf("%d. %s %d-%dmenit\n   %d penumpang Rp%d\n", i+1, kendaraan[i].jenis, kendaraan[i].waktuDisplay[0], kendaraan[i].waktuDisplay[1],  kendaraan[i].penumpang, kendaraan[i].harga);
+    }
+
+    int input;
+    printf("Masukkan jenis kendaraan (number): ");
+    
+    scanf("%d", &input); getchar();
+    if (input-1 >= 0 || input-1 < numKendaraan) {  
+        printf("Kendaraan: %s - %d\n\n", kendaraan[input-1].jenis, kendaraan[input-1].harga);
+        return 0;
+    }
+    printf("Kendaraan tidak ditemukan.\n");
+    return 1;
+}   
+
+int caraPembayaran(int uangUser, struct goridePembayaran *pembayaran, int length) {
     int pilihan;
-    struct goridePembayaran pembayaran[] = {
+    //copying from this function
+    struct goridePembayaran pembayaranData[] = {
         {"Gopay", ""},
         {"GoPay Tabungan by Jago", "Activate & earn 2.5 interest while spending "},
         {"Creadit or debit card", "Visa, Mastercard, AMEX, and JCB"},
         {"LinkAja", ""}, {"Jago Pockets", "Jago Bank account"}, 
         {"cash", ""}
     };
+    pembayaran = pembayaranData;
     sprintf(pembayaran[0].deskripsi, "%s%d", "Balance : " , uangUser);
 
-    int numPembayaran = sizeof(pembayaran) / sizeof(pembayaran[0]);
+    //display
+    int numPembayaran = sizeof(pembayaranData) / sizeof(pembayaranData[0]);
     for(int i = 0; i < numPembayaran; i++) {
-        printf("%d. %s - %s\n", i+1, pembayaran[i].jenis, pembayaran[i].deskripsi);
+        printf("%d. %s\n   %s\n", i+1, pembayaran[i].jenis, pembayaran[i].deskripsi);
     }
-    char input[30];
-    printf("Masukkan jenis payment (string): ");
-    scanf("%[^\n]", input); getchar();
 
-    for (int i = 0; i < numPembayaran; i++) {
-        if (strcmp(pembayaran[i].jenis, input) == 0) {  
-            printf("Payment method found: %s - %s\n\n", pembayaran[i].jenis, pembayaran[i].deskripsi);
-            return 0;
-        }
+    //input
+    int input;
+    printf("Masukkan jenis payment (number): ");
+    scanf("%d", &input); getchar();
+    if (input-1 >= 0 || input-1 < numPembayaran) {  
+        printf("Payment: %s\n\n", pembayaran[input-1].jenis);
+        return 0;
     }
-    printf("Payment method not found.\n");
+    printf("Payment tidak ditemukan.\n");
     return 1;
 }
 
@@ -106,19 +131,15 @@ int diskon() {
     }
 
     //input for search
-    char input[30];
-    printf("Pilih jumlah diskon (int): ");
-    scanf("%[^\n]", input); getchar();
-    
-    while(1){
-        for (int i = 0; i < numDiskon; i++) {
-            if (diskon[i].jumlah == atoi(input)) {  
-                return diskon[i].jumlah;
-            }
-        }
-        printf("Diskon not found.\n");
-    }  
-    return 1;
+    int input;
+    printf("Pilih jumlah diskon (number): ");
+    scanf("%d", &input); getchar();
+    if (input-1 >= 0 || input-1 < numDiskon) {  
+        printf("%d\n", diskon[input].jumlah);
+        return diskon[input].jumlah;
+    }
+    printf("Diskon not found.\n");  
+    return -1;
 }
 
 // //linked list
@@ -202,23 +223,44 @@ void gopayFunc(int* uangUser){
 }
 
 void gorideFunc(int* uangUser){
-    int cek;
+    int cek; int dis;
 
     //goride array variable
     struct gorideDestinasi destinasiStruct;
     destinasiStruct.max = 50;
     destinasiStruct.front = 0;
+    struct goridePembayaran pembayaran[10];
+    struct gorideKendaraan kendaraan[10];
+    
 
     //main function 
-    // Call the caraPembayaran function
     printf("Goride\n");
     printf("Where would you like to go?\n");
+
+    //displayting map
     gorideDisplayMap();
-    if (gorideDestination(&destinasiStruct) == 1)
+
+    //displaying destination
+    if (gorideDestination(&destinasiStruct) > 1)
         return;
-    caraPembayaran(*uangUser);
-    queuePemesanan(); 
-    int dis = diskon();
+
+    //pilih kendaraan
+    if(pilihKendaraan(kendaraan) > 0)
+        return;
+
+    //displaying pembayaran
+    int length = sizeof(pembayaran)/sizeof(pembayaran[0]);
+    if(caraPembayaran(*uangUser, pembayaran, length) > 0)
+        return;
+
+    //antrian pemesanan
+    queuePemesanan();  
+
+    //pilih diskon
+    dis = diskon();
+    if(dis < 0)
+        return;
+
     *uangUser -= dis;
     return;
 }
@@ -268,7 +310,7 @@ int gorideDestination(struct gorideDestinasi *destinasi) {
     else {
         //pop sampai ketemu
         int tempMax = destinasi->front;
-        while(!(destinasi->front == 0)){
+        while(!(destinasi->front < 0)){
             if (destinasi->front == (tempMax - choice)){
                 if (strcmp(" ", destinasi->alamat[destinasi->front]) == 0)
                     printf("Destinasi yang dipilih:  %s\n\n", destinasi->nama[destinasi->front]);
