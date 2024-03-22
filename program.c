@@ -218,6 +218,7 @@ void gorideFunc(int* uangUser){
     printf("Diskon: %d\n\n", diskonPilihanS.diskonPilihan.jumlah);
     *uangUser -= (kendaraanPilihan.chosenKendaraan.harga - diskonPilihanS.diskonPilihan.jumlah);
     printf("Pembayaran akhir: %d\n", *uangUser);
+    printf("Press any key to go back\n"); getchar();
     return;
 }
 
@@ -246,44 +247,42 @@ struct DestinasiPilihan gorideDestination() {
 
     //display dari terakhir (POP)
     struct gorideDestinasi destinasiTemp = destinasi;
-    printf("Urutan tempat dari atas kiri\n");
     for(int i = 0, j = 1; destinasiTemp.front-1 >= i; destinasiTemp.front--, j++) {
         if (strcmp(" ", destinasiTemp.alamat[destinasiTemp.front-1]) == 0)
-            printf("%d. %s\n", j, destinasiTemp.nama[destinasiTemp.front-1]);
+            printf("%d. %s lokasi:(%d,%d)\n", j, destinasiTemp.nama[destinasiTemp.front-1], destinasiTemp.lokasix[destinasiTemp.front-1],destinasiTemp.lokasiy[destinasiTemp.front-1]);
         else
-            printf("%d. %s - %s\n", j, destinasiTemp.nama[destinasiTemp.front-1], destinasiTemp.alamat[destinasiTemp.front-1]);
+            printf("%d. %s - %s lokasi:(%d,%d)\n", j, destinasiTemp.nama[destinasiTemp.front-1], destinasiTemp.alamat[destinasiTemp.front-1], destinasiTemp.lokasix[destinasiTemp.front-1], destinasiTemp.lokasiy[destinasiTemp.front-1]);
     }
     printf("...\n");
-
     //input
-    printf("Pilih destinasi(0 to cancel): ");
-    scanf("%d", &choice); getchar();
-    printf("\n");
+        printf("Pilih destinasi(0 to cancel): ");
+        scanf("%d", &choice); getchar();
+        printf("\n");
 
-    if (choice < 0 || choice > destinasi.front) {
-        printf("Pilihan Invalid.\n");
-        destinasi.front = 0;
-        return pilihan;
-    } 
-    else if (choice == 0) {
-        destinasi.front = 0;
-        return pilihan;
-    } 
-    else {
-        //pop sampai ketemu
-        int tempMax = destinasi.front;
-        while(!(destinasi.front < 0)){
-            if (destinasi.front == (tempMax - choice)){
-                strcpy(pilihan.chosenNama, destinasi.nama[destinasi.front]);
-                strcpy(pilihan.chosenAlamat, destinasi.alamat[destinasi.front]);
-                pilihan.lokasix = destinasi.lokasix[destinasi.front];
-                pilihan.lokasiy = destinasi.lokasiy[destinasi.front];
-                pilihan.isValid = 1;
-                printf("Nama Tempat: %s\n\n", pilihan.chosenNama);
+        if (choice < 0 || choice > destinasi.front) {
+            printf("Pilihan Invalid.\n");
+            destinasi.front = 0;
+            return pilihan;
+        } 
+        else if (choice == 0) {
+            destinasi.front = 0;
+            return pilihan;
+        } 
+        else {
+            //pop sampai ketemu
+            int tempMax = destinasi.front;
+            while(!(destinasi.front < 0)){
+                if (destinasi.front == (tempMax - choice)){
+                    strcpy(pilihan.chosenNama, destinasi.nama[destinasi.front]);
+                    strcpy(pilihan.chosenAlamat, destinasi.alamat[destinasi.front]);
+                    pilihan.lokasix = destinasi.lokasix[destinasi.front];
+                    pilihan.lokasiy = destinasi.lokasiy[destinasi.front];
+                    pilihan.isValid = 1;
+                    printf("Nama Tempat: %s\n\n", pilihan.chosenNama);
+                }
+                destinasi.front = destinasi.front-1;
             }
-            destinasi.front = destinasi.front-1;
         }
-    }
     destinasi.front = 0;
     return pilihan;
 }
@@ -382,34 +381,60 @@ int gorideWriteMap(struct DestinasiPilihan destinasi){
 
 //pembayaran
 struct PembayaranPilihan caraPembayaran(int uangUser) {
+    int choice;
     struct PembayaranPilihan pilihan = {{}, 0};
     //copying from this function
-    struct goridePembayaran pembayaranData[] = {
-        {"Gopay", ""},
-        {"GoPay Tabungan by Jago", "Activate & earn 2.5 interest while spending "},
-        {"Creadit or debit card", "Visa, Mastercard, AMEX, and JCB"},
-        {"LinkAja", ""}, {"Jago Pockets", "Jago Bank account"}, 
-        {"cash", ""}
-    };
-    sprintf(pembayaranData[0].deskripsi, "%s%d", "Balance : " , uangUser);
+    struct goridePembayaran pembayaranData[15];
+    while(1){
+        int count = 0;
+        FILE *fpemb = fopen("pembayarangoride.txt", "r");
+        while(!feof(fpemb)){
+            fscanf(fpemb, "%[^#]#%[^\n]\n", pembayaranData[count].jenis, pembayaranData[count].deskripsi);
+            count++;
+        }
+        fclose(fpemb);
+        sprintf(pembayaranData[0].deskripsi, "%s%d", "Balance : " , uangUser);
 
-    //display
-    int numPembayaran = sizeof(pembayaranData) / sizeof(pembayaranData[0]);
-    for(int i = 0; i < numPembayaran; i++) {
-        printf("%d. %s\n   %s\n", i+1, pembayaranData[i].jenis, pembayaranData[i].deskripsi);
-    }
+        //pilihan
+        printf("1. Pilih metode pembayaran\n");
+        printf("2. Tambah metode pembayaran\n");
+        printf("Pilih menu: ");
+        scanf("%d", &choice); getchar();
 
-    //input
-    int input;
-    printf("Masukkan jenis pembayaran (number): ");
-    scanf("%d", &input); getchar();
-    if (input-1 >= 0 && input-1 < sizeof(pembayaranData)/sizeof(pembayaranData[0])) {
-        pilihan.chosenPembayaran = pembayaranData[input-1];
-        pilihan.isValid = 1;
-        printf("Pembayaran: %s\n\n", pilihan.chosenPembayaran);
-    } else {
-        printf("Pembayaran tidak ditemukan.\n");
-    }
+        if(choice == 1){
+            //input
+            //display
+            for(int i = 0; i < count; i++) {
+                if(strcmp(pembayaranData[i].deskripsi, " ") != 0)
+                    printf("%d. %s\n   %s\n", i+1, pembayaranData[i].jenis, pembayaranData[i].deskripsi);
+                else
+                    printf("%d. %s\n", i+1, pembayaranData[i].jenis);
+            }
+            int input;
+            printf("Masukkan jenis pembayaran (number): ");
+            scanf("%d", &input); getchar();
+            if (input-1 >= 0 && input-1 < sizeof(pembayaranData)/sizeof(pembayaranData[0])) {
+                pilihan.chosenPembayaran = pembayaranData[input-1];
+                pilihan.isValid = 1;
+                printf("Pembayaran: %s\n\n", pilihan.chosenPembayaran);
+                return pilihan;
+            } else {
+                printf("Pembayaran tidak ditemukan.\n");
+            }
+        }
+        else if(choice == 2){
+            //append to txt
+            printf("Masukkan Jenis Bank/Metode Pembayaran\n");
+            scanf(" %[^\n]", pembayaranData[count].jenis); getchar();
+            strcpy(pembayaranData[count].deskripsi," ");
+
+            FILE *fpembadd = fopen("pembayarangoride.txt", "a");
+            fprintf(fpembadd, "%s#%s\n", pembayaranData[count].jenis,pembayaranData[count].deskripsi);
+            fclose(fpembadd);
+            count++;
+            printf("Metode pembayaran berhasil ditambahkan\n\n");
+        }
+    }   
     return pilihan;
 }
 
@@ -425,10 +450,10 @@ void queuePemesanan() {
     printf("Nomor antrian = %s\n", nomorAntrian);
     if(queue.rear < queue.max){
         while(!feof(fpesan)){
-        fscanf(fpesan, "%s\n", pemesanan);
-        //enqueue
-        strcpy(queue.nomorPerjalanan[queue.rear], pemesanan);
-        queue.rear++;
+            fscanf(fpesan, "%s\n", pemesanan);
+            //enqueue
+            strcpy(queue.nomorPerjalanan[queue.rear], pemesanan);
+            queue.rear++;
         }
         fclose(fpesan);
         //nomor pemesanan goride
