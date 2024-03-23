@@ -74,47 +74,12 @@ void gofoodFunc(int* uangUser);
 struct DestinasiPilihan gorideDestination();
 void gorideDisplayMap();
 int gorideWriteMap(struct DestinasiPilihan destinasi);
-int gorideUpdatemap(struct DestinasiPilihan destinasi){
-    int x = destinasi.lokasix;
-    int y = destinasi.lokasiy;
-    FILE *fmap = fopen("lokasi.txt", "r");
-    char map[21][31];
-    int i = 0;
-
-    //read map 
-    while (!feof(fmap)) {
-        fgets(map[i], sizeof(map[i]), fmap);
-        i++;
-    }
-    fclose(fmap); 
-
-    int lines = i; 
-
-    // Update the map
-    for (i = 0; i < lines; ++i) {
-        for (int j = 0; map[i][j] != '\0'; ++j) {
-            if (map[i][j] == 'O')
-                map[i][j] = 'o';
-            else if (map[i][j] == 'o')
-                map[i][j] = 'X'; 
-        }
-    }
-
-    //writing
-    fmap = fopen("lokasi.txt", "w");
-
-    for (i = 0; i < lines; ++i) {
-        fprintf(fmap, "%s", map[i]);
-    }
-    fclose(fmap); 
-
-    return 0; 
-}
+int gorideUpdatemap(struct DestinasiPilihan destinasi);
 
 struct KendaraanPilihan  pilihKendaraan();
 struct PembayaranPilihan caraPembayaran(int uangUser);
 void queuePemesanan();
-struct DiskonPilihan diskon();
+struct DiskonPilihan diskon(char pemilihanKendaraan[20]);
 
 //function for stack
 void arrPushGorideDes(struct gorideDestinasi *goride, char nama[], char alamat[], int x, int y, char status);
@@ -122,7 +87,7 @@ void arrPushGorideDes(struct gorideDestinasi *goride, char nama[], char alamat[]
 //function for queue
 void queuePemesanan();
 
-int main() {
+int main(){
     //printing logo
     int uangUser = 187150;
     FILE *flogo = fopen("logo.txt", "r");
@@ -163,18 +128,19 @@ int main() {
 
 //main function
 void gopayFunc(int* uangUser){
+    return;
 }
 
 void gorideFunc(int* uangUser){
-    int cek; int dis; 
+    int cek; 
+    int dis; 
     //main function 
+    //displayting map
     printf("Goride\n");
     printf("Where would you like to go?\n");
-
-    //displayting map
     gorideDisplayMap();
-
     //displaying destination
+    
     struct DestinasiPilihan destinasiPilihan = gorideDestination();
     if (!destinasiPilihan.isValid) {
         printf("Invalid destination.\n");
@@ -203,7 +169,7 @@ void gorideFunc(int* uangUser){
     queuePemesanan();  
 
     //pilih diskon
-    struct DiskonPilihan diskonPilihanS = diskon();
+    struct DiskonPilihan diskonPilihanS = diskon(kendaraanPilihan.chosenKendaraan.jenis);
     if (!diskonPilihanS.isValid) {
         printf("Invalid discount choice. Exiting.\n");
         return;
@@ -476,12 +442,12 @@ void queuePemesanan() {
 }
 
 //diskon
-struct DiskonPilihan diskon() {
+struct DiskonPilihan diskon(char pemilihanKendaraan[20]) {
     struct DiskonPilihan pilihan = {{}, 0};
-    struct gorideDiskon diskon[] = {{5000, "17-03-24", "goride", "goride(comfort)"}, {10000, "17-03-24", "gocar", "gocarXL"}, {5000, "17-03-24", "goride", "goride(comfort)"}, {5000, "17-03-24", "goride", "goride(comfort)"}, {10000, "17-03-24", "gocar", "gocarXL"}, {10000, "17-03-24", "gocar", "gocarXL"}};
+    struct gorideDiskon diskon[] = {{5000, "17-03-24", "GoRide", "GoRide Comfort"}, {10000, "17-03-24", "GoCar", "GoCar XL"}, {5000, "17-03-24", "GoRide", "GoRide Comfort"}, {5000, "17-03-24", "GoRide", "GoRide Comfort"}, {10000, "17-03-24", "GoCar", "GoCar XL"}, {10000, "17-03-24", "GoCar", "GoCar XL"}};
     int numDiskon = sizeof(diskon)/sizeof(diskon[0]);
     
-    //soring
+    //sorting (bubble)
     for(int i = 0; i < numDiskon; i++) {
         for(int j = i+1; j < numDiskon; j++) {
             if(diskon[i].jumlah < diskon[j].jumlah) {
@@ -491,22 +457,79 @@ struct DiskonPilihan diskon() {
             }
         }
     }
-
-    // Display
-    for(int i = 0; i < numDiskon; i++) {
-        printf("%d. Diskon: Rp%d valid sampai %s untuk %s, %s\n", i+1, diskon[i].jumlah, diskon[i].kadarluarsa, diskon[i].jenisKendaraan1, diskon[i].jenisKendaraan2);
-    }
-
-    //input for search
     int input;
-    printf("Pilih jumlah diskon (number): ");
-    scanf("%d", &input); getchar();
-    if (input-1 >= 0 || input-1 < numDiskon) {  
-        printf("Diskon: %d\n\n", diskon[input-1].jumlah);
-        pilihan.diskonPilihan = diskon[input-1];
-        pilihan.isValid = 1;
-        return pilihan;
+    while(1){
+        // Display
+        for(int i = 0; i < numDiskon; i++) {
+            printf("%d. Diskon: Rp%d valid sampai %s untuk %s, %s\n", i+1, diskon[i].jumlah, diskon[i].kadarluarsa, diskon[i].jenisKendaraan1, diskon[i].jenisKendaraan2);
+        }
+        printf("0.Skip\n");
+
+        //input for search
+        printf("Pilih jumlah diskon (number): ");
+        scanf("%d", &input); getchar();
+        if (input > 0 && input <= numDiskon) {  
+            if(strcmp(pemilihanKendaraan, diskon[input-1].jenisKendaraan1) == 0 || strcmp(pemilihanKendaraan, diskon[input-1].jenisKendaraan2) == 0){
+                printf("Diskon: %d\n\n", diskon[input-1].jumlah);
+                pilihan.diskonPilihan = diskon[input-1];
+                pilihan.isValid = 1;
+                return pilihan;
+            }
+            else {
+                printf("Diskon tidak tersedia untuk kendaraan tersebut, Mohon coba lagi\n");
+            }
+        }
+        else if (input-1 == -1) {
+            printf("Tidak memilih diskon\n");
+            pilihan.diskonPilihan.jumlah = 0;
+            strcpy(pilihan.diskonPilihan.jenisKendaraan1,"");
+            strcpy(pilihan.diskonPilihan.jenisKendaraan2,"");
+            strcpy(pilihan.diskonPilihan.kadarluarsa, "");
+            pilihan.isValid = 1;
+            return pilihan;
+        }
+
+        else {
+            printf("Diskon not found.\n\n");  
+        }
     }
-    printf("Diskon not found.\n\n");  
     return pilihan;
+}
+
+//update map
+int gorideUpdatemap(struct DestinasiPilihan destinasi){
+    int x = destinasi.lokasix;
+    int y = destinasi.lokasiy;
+    FILE *fmap = fopen("lokasi.txt", "r");
+    char map[21][31];
+    int i = 0;
+
+    //read map 
+    while (!feof(fmap)) {
+        fgets(map[i], sizeof(map[i]), fmap);
+        i++;
+    }
+    fclose(fmap); 
+
+    int lines = i; 
+
+    // Update the map
+    for (i = 0; i < lines; ++i) {
+        for (int j = 0; map[i][j] != '\0'; ++j) {
+            if (map[i][j] == 'O')
+                map[i][j] = 'o';
+            else if (map[i][j] == 'o')
+                map[i][j] = 'X'; 
+        }
+    }
+
+    //writing
+    fmap = fopen("lokasi.txt", "w");
+
+    for (i = 0; i < lines; ++i) {
+        fprintf(fmap, "%s", map[i]);
+    }
+    fclose(fmap); 
+
+    return 0; 
 }
